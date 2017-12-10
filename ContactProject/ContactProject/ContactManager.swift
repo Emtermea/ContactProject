@@ -13,8 +13,7 @@ class ContactManager: NSObject {
 
     let query = "http://www.storage42.com/contacts.json"
     
-    func getDataWith(completion: @escaping (Result<[String: AnyObject]>) -> Void) {
-        
+    func getDataWith(completion: @escaping (Result<[[String: AnyObject]]>) -> Void) {
         guard let url = URL(string: query) else { return }
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             guard error == nil else { return }
@@ -22,13 +21,18 @@ class ContactManager: NSObject {
             do {
                 if let json = try JSONSerialization.jsonObject(with: data, options: [.mutableContainers]) as? [String: AnyObject] {
                     DispatchQueue.main.async {
-                        completion(.Success(json))
+//                        completion(.Success(json))
+//                        let itemsJsonArray = json["contacts"]?.string
+                        guard let itemsJsonArray = json["contacts"] as? [[String: AnyObject]] else {  return  }
+                        completion(.Success(itemsJsonArray))
+                        print("sub json ", itemsJsonArray)
+    
                     }
                 }
             } catch let error {
                 print(error)
             }
-            }.resume()
+        }.resume()
     }
 }
 
