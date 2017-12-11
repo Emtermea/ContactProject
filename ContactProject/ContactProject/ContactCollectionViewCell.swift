@@ -10,14 +10,12 @@ import UIKit
 
 class ContactCollectionViewCell: UICollectionViewCell {
     
-    
-    @IBOutlet weak var imageViewCell: UIImageView!
+    @IBOutlet weak var imageviewCell: UIImageView!
     
     func setContactCellWith(contact: Contact) {
         DispatchQueue.main.async {
             if let url = contact.picture {
-                self.imageViewCell.loadImageUsingCacheWithURLString(url, placeHolder: UIImage(named: "placeholder"))
-//                self.photoImageview.loadImageUsingCacheWithURLString(url, placeHolder: UIImage(named: "placeholder"))
+                self.imageviewCell.loadImageUsingCacheWithURLString(url, placeHolder: UIImage(named: "placeholder"))
             }
         }
     }

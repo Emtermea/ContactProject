@@ -13,33 +13,90 @@ private let reuseIdentifier = "contactCell"
 
 class AllContactCollectionViewController: UICollectionViewController {
     
-//    var contactManager = ContactManager()
 
     @IBOutlet var allContactsCollection: UICollectionView!
     
     
     lazy var fetchedhResultController: NSFetchedResultsController<NSFetchRequestResult> = {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: String(describing: Contact.self))
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "contacts", ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "email", ascending: true)]
         let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: CoreDataStack.sharedInstance.persistentContainer.viewContext, sectionNameKeyPath: nil, cacheName: nil)
-        // frc.delegate = self
+//         frc.delegate = self
         return frc
     }()
     
     
+    func createContactEntityFrom(dictionary: [String: AnyObject]) -> NSManagedObject? {
+        let context = CoreDataStack.sharedInstance.persistentContainer.viewContext
+        if let contactEntity = NSEntityDescription.insertNewObject(forEntityName: "Contact", into: context) as? Contact {
+            contactEntity.username = dictionary["username"] as? String
+            contactEntity.password = dictionary["password"] as? String
+            contactEntity.gender = dictionary["gender"] as? String
+            contactEntity.email = dictionary["email"] as? String
+            contactEntity.cell = dictionary["cell"] as? String
+            contactEntity.phone = dictionary["phone"] as? String
+            let nameDic = dictionary["name"] as? [String: AnyObject]
+            contactEntity.name = nameDic?["first"] as? String
+            let picDic = dictionary["picture"] as? [String: AnyObject]
+            contactEntity.picture = picDic?["medium"] as? String
+            
+            return contactEntity
+        }
+        return nil
+    }
     
+    
+    func saveInCoreDataWith(array: [[String: AnyObject]]) {
+        _ = array.map{self.createContactEntityFrom(dictionary: $0)}
+        do {
+            try CoreDataStack.sharedInstance.persistentContainer.viewContext.save()
+        } catch let error {
+            print(error)
+        }
+    }
+    
+    func clearData() {
+        do {
+            let context = CoreDataStack.sharedInstance.persistentContainer.viewContext
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Contact")
+            do {
+                let objects  = try context.fetch(fetchRequest) as? [NSManagedObject]
+                _ = objects.map{$0.map{context.delete($0)}}
+                CoreDataStack.sharedInstance.saveContext()
+            } catch let error {
+                print("ERROR DELETING : \(error)")
+            }
+        }
+    }
+    
+    func updateCollectionContent() {
+        do {
+            try self.fetchedhResultController.performFetch()
+            print("count of section FRC",self.fetchedhResultController.sections?.count as Any)
+            print("COUNT FETCHED FIRST: \(String(describing: self.fetchedhResultController.sections?[0].numberOfObjects))")
+        } catch let error  {
+            print("ERROR: \(error)")
+        }
+        ViewController.contactManager.getDataWith { (result) in
+            switch result {
+            case .Success(let data):
+                self.clearData()
+                self.saveInCoreDataWith(array: data)
+            case .Error(let msg):
+                print(msg)
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        updateCollectionContent()
 
         // Uncomment the following line to preserve selection between presentations
-         self.clearsSelectionOnViewWillAppear = false
+//         self.clearsSelectionOnViewWillAppear = false
 
         // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-
-        // Do any additional setup after loading the view.
+//        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
     }
 
     override func didReceiveMemoryWarning() {
@@ -47,21 +104,12 @@ class AllContactCollectionViewController: UICollectionViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
-
     // MARK: UICollectionViewDataSource
 
     override func numberOfSections(in collectionView: UICollectionView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        if let count = fetchedhResultController.sections?.first?.numberOfObjects {
+//        if let count = fetchedhResultController.sections?.first?.numberOfObjects {
+        if let count = fetchedhResultController.sections?.count {
             return count
         }
         return 0
@@ -76,42 +124,16 @@ class AllContactCollectionViewController: UICollectionViewController {
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "contactCell", for: indexPath) as! ContactCollectionViewCell
-        if let contact = fetchedhResultController.object(at: indexPath) as? Contact {
-            cell.setContactCellWith(contact: contact)
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! ContactCollectionViewCell
+        if (fetchedhResultController.sections?.count)! < (indexPath.count) {
+            if let contact = fetchedhResultController.object(at: indexPath) as? Contact {
+                cell.setContactCellWith(contact: contact)
+                cell.backgroundColor = UIColor.black
+                return cell
+            }
         }
         return cell
     }
 
-    // MARK: UICollectionViewDelegate
-
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-    
-    }
-    */
-
 }
+

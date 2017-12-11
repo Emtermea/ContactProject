@@ -15,7 +15,7 @@ class ContactManager: NSObject {
     
     func getDataWith(completion: @escaping (Result<[[String: AnyObject]]>) -> Void) {
         guard let url = URL(string: query) else {
-            return completion(.Error("Invalid URL, we can't update your feed"))
+            return completion(.Error("Invalid URL, we can't update your feed "))
         }
         URLSession.shared.dataTask(with: url) { (data, response, error) in
             guard error == nil else {

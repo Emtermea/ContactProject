@@ -20,7 +20,7 @@ extension UIImageView {
         if let url = URL(string: URLString) {
             URLSession.shared.dataTask(with: url, completionHandler: { (data, response, error) in
                 if error != nil {
-                    print("ERROR LOADING IMAGES FROM URL: \(String(describing: error))")
+                    print("-------------- ERROR LOADING IMAGES FROM URL--------------: \(String(describing: error))")
                     DispatchQueue.main.async {
                         self.image = placeHolder
                     }

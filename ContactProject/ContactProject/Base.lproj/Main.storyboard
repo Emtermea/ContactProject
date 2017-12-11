@@ -83,7 +83,7 @@
                                 </constraints>
                                 <size key="customSize" width="158" height="162"/>
                                 <connections>
-                                    <outlet property="imageViewCell" destination="nSq-1o-nls" id="Zsw-N9-Ucq"/>
+                                    <outlet property="imageviewCell" destination="nSq-1o-nls" id="wYu-pN-hAf"/>
                                 </connections>
                             </collectionViewCell>
                         </cells>
